@@ -2,7 +2,24 @@
 
 ## Базовый URL
 
-http://185.5.249.114:8085
+http://10.82.196.214:8085
+
+## 📝 Примеры тестовых сценариев
+
+### Сценарий 1: Полная проверка книги
+
+1. Создать новую книгу (`POST /books`)
+2. Получить книгу по ID (`GET /books/{id}`)
+
+3. Обновить цену (`PATCH /books/{id}`)
+
+4. Проверить наличие (`GET /books/{id}/stock`)
+
+5. Удалить книгу (`DELETE /books/{id}`)
+
+### Сценарий 2: Покупка (ну почти) и отзыв
+1. Проверить наличие книги (`GET /books/{id}/stock`)
+2. Добавить отзыв на книгу (`POST /books/{id}/reviews`)
 
 
 ## Аутентификация
@@ -102,7 +119,7 @@ GET /books/{id}
 ```
 
 ## 3. Получить книгу по ISBN
-```html
+```http
 GET /books/isbn/{isbn}
 ```
 
@@ -130,7 +147,7 @@ GET /books/isbn/{isbn}
 ```
 
 ## 4. Создать новую книгу
-```html
+```http
 POST /books
 Headers: X-API-Key: bookstore-2026-secret
 Content-Type: application/json
@@ -144,7 +161,7 @@ Content-Type: application/json
   "title": "New Book",
   "author": "John Doe",
   "genre": "Fiction",
-  "year": 2024,
+  "year": 2026,
   "price": 599,
   "stock": 10,
   "pages": 250
@@ -152,19 +169,266 @@ Content-Type: application/json
 ```
 
 ### Обязательные поля
-- isbn (string) - уникальный идентификатор
+- `isbn` (string) - уникальный идентификатор
 
-- title (string) - название книги
+- `title` (string) - название книги
 
-- author (string) - автор
+- `author` (string) - автор
 
-- price (integer) - цена
+- `price` (integer) - цена
 
 ### Опциональные поля
-- genre (string) - жанр (default: "Uncategorized")
+- `genre` (string) - жанр (default: "Uncategorized")
 
-- year (integer) - год издания (default: текущий год)
+- `year` (integer) - год издания (default: текущий год)
 
-- stock (integer) - количество на складе (default: 0)
+- `stock` (integer) - количество на складе (default: 0)
 
-- pages (integer) - количество страниц (default: 0)
+- `pages` (integer) - количество страниц (default: 0)
+
+### Ответ (201 Created)
+
+```json
+{
+  "id": 8,
+  "isbn": "978-1234567890",
+  "title": "New Book",
+  "author": "John Doe",
+  "genre": "Fiction",
+  "year": 2026,
+  "price": 599,
+  "stock": 10,
+  "rating": 0,
+  "pages": 250
+}
+```
+
+### Ошибка (400 Bad Request)
+
+```json
+{
+  "error": "Missing required fields: isbn, title, author, price are mandatory"
+}
+```
+
+### Ошибка (409 Conflict)
+
+```json
+{
+  "error": "Book with this ISBN already exists"
+}
+```
+
+## 5. Полностью обновить книгу
+
+```http
+PUT /books/{id}
+Headers: X-API-Key: bookstore-2026-secret
+Content-Type: application/json
+```
+
+### Тело запроса (все поля обязательны)
+
+```json
+{
+  "isbn": "978-0141182803",
+  "title": "1984 - Updated",
+  "author": "George Orwell",
+  "genre": "Dystopian",
+  "year": 1949,
+  "price": 499,
+  "stock": 20,
+  "rating": 4.9,
+  "pages": 328
+}
+```
+
+### Ответ (200 ОК)
+
+```json
+{
+  "id": 1,
+  "isbn": "978-0141182803",
+  "title": "1984 - Updated",
+  "author": "George Orwell",
+  "genre": "Dystopian",
+  "year": 1949,
+  "price": 499,
+  "stock": 20,
+  "rating": 4.9,
+  "pages": 328
+}
+```
+
+### Ошибка 404 (Not Found)
+
+```json
+{
+  "error": "Book not found"
+}
+```
+
+## 6. Частично обновить книгу
+
+```http
+PATCH /books/{id}
+Headers: X-API-Key: bookstore-2026-secret
+Content-Type: application/json
+```
+
+### Тело запроса (только изменяемые поля)
+
+```json
+{
+  "price": 499,
+  "stock": 25
+}
+```
+
+### Ответ (200 ОК)
+
+```json
+{
+  "id": 1,
+  "isbn": "978-0141182803",
+  "title": "1984",
+  "author": "George Orwell",
+  "genre": "Dystopian",
+  "year": 1949,
+  "price": 499,
+  "stock": 25,
+  "rating": 4.8,
+  "pages": 328
+}
+```
+
+## 7. Удалить книгу
+
+```http
+DELETE /books/{id}
+Headers: X-API-Key: bookstore-2026-secret
+```
+
+### Ответ (204 No Content)
+
+Тела ответа нет
+
+### Ошибка 404 (Not Found)
+
+```json
+{
+  "error": "Book not found"
+}
+```
+
+## 8. Проверить наличие книги на складе
+```http
+GET /books/{id}/stock
+```
+
+### Пример запроса
+```http
+GET /books/1/stock
+```
+
+### Ответ (200 ОК)
+```json
+{
+"bookId": 1,
+"title": "1984",
+"stock": 15,
+"available": true,
+"inStock": true
+}
+```
+
+### Ошибка 404 (Not Found)
+
+```json
+{
+  "error": "Book not found"
+}
+```
+
+# 📝 Отзывы
+
+## 9. Добавить отзыв на книгу
+
+```http
+POST /books/{id}/reviews
+Content-Type: application/json
+```
+
+### Тело запроса
+
+```json
+{
+  "rating": 5,
+  "comment": "Excellent book! Must read!",
+  "reviewerName": "John Doe"
+}
+```
+
+### Поля
+
+comment и reviewerName - не обязательные
+
+### Ответ (201 Created)
+
+```json
+{
+  "reviewId": 1,
+  "bookId": 1,
+  "rating": 5,
+  "comment": "Excellent book! Must read!",
+  "reviewerName": "John Doe",
+  "date": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Ответ (400 Bad Request)
+
+```json
+{
+  "error": "Rating must be between 1 and 5"
+}
+```
+
+### Ошибка (404 Not Found)
+
+```json
+{
+  "error": "Book not found"
+}
+```
+
+## 10. Получить отзывы на книгу
+
+```http
+GET /books/{id}/reviews
+```
+
+### Пример запроса
+```http
+GET /books/1/reviews
+```
+
+### Ответ (200 ОК)
+
+```json
+{
+  "bookId": 1,
+  "totalReviews": 3,
+  "averageRating": 4.7,
+  "reviews": [
+    {
+      "reviewId": 1,
+      "bookId": 1,
+      "rating": 5,
+      "comment": "Excellent book!",
+      "reviewerName": "John",
+      "date": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
